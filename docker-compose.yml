@@ -1,0 +1,120 @@
+# ============================================================================
+# NodeTL - Docker Compose Configuration
+# ============================================================================
+# Usage:
+#   docker compose up -d        # Start all services
+#   docker compose down         # Stop all services
+#   docker compose logs -f      # View logs
+# ============================================================================
+
+services:
+  # --------------------------------------------------------------------------
+  # MongoDB Database
+  # --------------------------------------------------------------------------
+  mongodb:
+    image: mongo:8.2
+    container_name: nodetl-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=nodetl
+    networks:
+      - nodetl-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------------------------
+  # Backend API (Go)
+  # --------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: nodetl-backend
+    restart: unless-stopped
+    expose:
+      - "8603"
+    environment:
+      # Server settings
+      - SERVER_PORT=8603
+      - SERVER_MODE=release
+      
+      # MongoDB settings
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DATABASE=nodetl
+      
+      # Logging settings
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      
+      # Auth settings
+      - AUTH_ACCESS_TOKEN_SECRET=change-me-to-a-secure-secret-at-least-32-chars
+      - AUTH_REFRESH_TOKEN_SECRET=change-me-to-another-secure-secret-at-least-32-chars
+      - AUTH_ACCESS_TOKEN_EXPIRY=15m
+      - AUTH_REFRESH_TOKEN_EXPIRY=168h
+      - AUTH_AUTO_CREATE_ADMIN=true
+      
+      # OAuth - Google (optional)
+      - AUTH_GOOGLE_CLIENT_ID=
+      - AUTH_GOOGLE_CLIENT_SECRET=
+      - AUTH_GOOGLE_REDIRECT_URL=http://localhost:8602/api/v1/auth/google/callback
+      
+      # OAuth - Microsoft (optional)
+      - AUTH_MICROSOFT_CLIENT_ID=
+      - AUTH_MICROSOFT_CLIENT_SECRET=
+      - AUTH_MICROSOFT_TENANT_ID=common
+      - AUTH_MICROSOFT_REDIRECT_URL=http://localhost:8602/api/v1/auth/microsoft/callback
+      
+      # SMTP settings (optional)
+      - SMTP_HOST=
+      - SMTP_PORT=587
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+      - SMTP_FROM_EMAIL=noreply@example.com
+      - SMTP_FROM_NAME=NodeTL
+      
+      # App settings
+      - APP_NAME=NodeTL
+      - APP_DOMAIN=http://localhost:8602
+      - APP_LOGO_PATH=/logo.svg
+      - APP_PRIMARY_COLOR=#0ea5e9
+      - APP_SECONDARY_COLOR=#6366f1
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - nodetl-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8603/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --------------------------------------------------------------------------
+  # Frontend (React)
+  # --------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: nodetl-frontend
+    restart: unless-stopped
+    ports:
+      - "8602:80"
+    depends_on:
+      - backend
+    networks:
+      - nodetl-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  nodetl-network:
+    driver: bridge

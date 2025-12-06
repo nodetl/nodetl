@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow-frontend
+  namespace: default
+  labels:
+    app: workflow-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: workflow-frontend
+  template:
+    metadata:
+      labels:
+        app: workflow-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: your-registry/workflow-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow-backend
+  namespace: default
+  labels:
+    app: workflow-backend
+spec:
+  replicas: 2  # Scale 2 instances
+  selector:
+    matchLabels:
+      app: workflow-backend
+  template:
+    metadata:
+      labels:
+        app: workflow-backend
+    spec:
+      containers:
+      - name: backend
+        image: your-registry/workflow-backend:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MONGODB_URI
+          value: "mongodb://workflow-mongodb:27017"
+        - name: SERVER_MODE
+          value: "release"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10

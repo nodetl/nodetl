@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: workflow-mongodb
+  namespace: default
+spec:
+  serviceName: "workflow-mongodb"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workflow-mongodb
+  template:
+    metadata:
+      labels:
+        app: workflow-mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:8.2
+        ports:
+        - containerPort: 27017
+        volumeMounts:
+        - name: mongodb-data
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: mongodb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi

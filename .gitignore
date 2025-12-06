@@ -1,0 +1,52 @@
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+*.log
+*.tmp
+*.swp
+
+# IDEs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.iml
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Go (Backend)
+src/backend/workflow-server
+src/backend/server
+src/backend/bin/
+src/backend/vendor/
+src/backend/coverage.txt
+src/backend/profile.out
+src/backend/*.test
+src/backend/*.out
+
+# Node/React (Frontend)
+src/frontend/node_modules/
+src/frontend/dist/
+src/frontend/build/
+src/frontend/coverage/
+src/frontend/.npm/
+src/frontend/*.local
+src/frontend/.eslintcache
+
+# Docker
+docker-compose.override.yml
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Kubernetes
+k8s/*.secret.yaml
