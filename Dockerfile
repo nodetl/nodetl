@@ -17,7 +17,7 @@ COPY src/backend/ .
 RUN CGO_ENABLED=0 GOOS=linux go build -o server ./cmd/server
 
 # Stage 2: Build Frontend
-FROM node:25-alpine3.19 AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 WORKDIR /build
 # Ensure distro packages are updated so known vulnerabilities are patched
 RUN apk update && apk upgrade --available --no-cache
