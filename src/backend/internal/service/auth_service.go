@@ -10,7 +10,6 @@ import (
 	"github.com/nodetl/nodetl/internal/domain"
 	"github.com/nodetl/nodetl/internal/repository"
 	"github.com/nodetl/nodetl/pkg/auth"
-	"github.com/nodetl/nodetl/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -443,17 +442,7 @@ func (s *AuthService) SeedAdminUser(ctx context.Context) error {
 		return fmt.Errorf("failed to create admin user: %w", err)
 	}
 
-	// Print credentials to log (will appear in Docker logs)
-	logger.Log.Infow("========================================")
-	logger.Log.Infow("DEFAULT ADMIN ACCOUNT CREATED")
-	logger.Log.Infow("========================================")
-	logger.Log.Infow("Email: admin@nodetl.local")
-	logger.Log.Infow("Password: " + password)
-	logger.Log.Infow("========================================")
-	logger.Log.Infow("PLEASE CHANGE THIS PASSWORD IMMEDIATELY!")
-	logger.Log.Infow("========================================")
-
-	// Also print to stdout for docker logs
+	// Print credentials to stdout for docker logs
 	fmt.Println("========================================")
 	fmt.Println("DEFAULT ADMIN ACCOUNT CREATED")
 	fmt.Println("========================================")
