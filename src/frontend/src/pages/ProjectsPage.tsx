@@ -8,7 +8,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { projectsApi } from '@/api';
 import { cn, formatDate } from '@/lib/utils';
-import { Layout } from '@/components/Layout';
+import { Pagination } from '@/components/Pagination';
 import type { Project, Workflow as WorkflowType } from '@/types';
 
 interface ProjectFormData {
@@ -22,7 +22,7 @@ export default function ProjectsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [showNewProject, setShowNewProject] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -122,26 +122,22 @@ export default function ProjectsPage() {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-full">
-          <p className="text-red-500">Failed to load projects. Please try again.</p>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-full">
+        <p className="text-red-500">Failed to load projects. Please try again.</p>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="h-full flex flex-col p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -318,27 +314,17 @@ export default function ProjectsPage() {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        )}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={projects.length}
+          pageSize={pageSize}
+          onPageChange={(p) => setPage(p)}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
 
         {/* New/Edit Project Modal */}
         {(showNewProject || editingProject) && (
@@ -426,6 +412,6 @@ export default function ProjectsPage() {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 }

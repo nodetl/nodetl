@@ -19,6 +19,7 @@ export interface Project {
   description: string;
   versionTag: string;    // e.g., "1.0.0", "2.0.0"
   pathPrefix: string;    // e.g., "/api/v1"
+  isLocked?: boolean;    // When true, no changes allowed
   workflows: Workflow[];
   createdAt: string;
   updatedAt: string;

@@ -12,12 +12,11 @@ import {
   X,
   ArrowLeft,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Pagination } from '@/components/Pagination';
 import { usersApi, rolesApi, type Role } from '@/api';
 import { useAuthStore, type User } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
@@ -33,11 +32,12 @@ export function UsersPage() {
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'createdAt' | 'role'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editRoleId, setEditRoleId] = useState<string>('');
   const [editStatus, setEditStatus] = useState<string>('');
@@ -121,7 +121,7 @@ export function UsersPage() {
         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (user.role?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+        getRoleName(user.roleId).toLowerCase().includes(searchQuery.toLowerCase())
     );
     
     // Sort
@@ -132,7 +132,7 @@ export function UsersPage() {
       } else if (sortBy === 'email') {
         comparison = a.email.localeCompare(b.email);
       } else if (sortBy === 'role') {
-        comparison = (a.role?.name || '').localeCompare(b.role?.name || '');
+        comparison = getRoleName(a.roleId).localeCompare(getRoleName(b.roleId));
       } else {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       }
@@ -140,7 +140,7 @@ export function UsersPage() {
     });
     
     return filtered;
-  }, [users, searchQuery, sortBy, sortOrder]);
+  }, [users, roles, searchQuery, sortBy, sortOrder]);
   
   // Pagination
   const totalPages = Math.ceil(filteredUsers.length / pageSize);
@@ -164,6 +164,12 @@ export function UsersPage() {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  // Helper to get role name from roleId
+  const getRoleName = (roleId: string) => {
+    const role = roles.find(r => r.id === roleId);
+    return role?.name || 'N/A';
   };
 
   if (loading) {
@@ -193,12 +199,20 @@ export function UsersPage() {
               Users
             </h1>
           </div>
-          {hasPermission('invitations', 'create') && (
-            <Button onClick={() => navigate('/admin/invitations')}>
-              <Mail className="w-4 h-4 mr-2" />
-              Invite User
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {hasPermission('roles', 'view') && (
+              <Button variant="outline" onClick={() => navigate('/admin/roles')}>
+                <Shield className="w-4 h-4 mr-2" />
+                Manage Roles
+              </Button>
+            )}
+            {hasPermission('invitations', 'create') && (
+              <Button onClick={() => navigate('/admin/invitations')}>
+                <Mail className="w-4 h-4 mr-2" />
+                Invite User
+              </Button>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -266,7 +280,8 @@ export function UsersPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-visible">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -330,7 +345,7 @@ export function UsersPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                         <Shield className="w-3 h-3 mr-1" />
-                        {user.role?.name || 'N/A'}
+                        {getRoleName(user.roleId)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -354,43 +369,33 @@ export function UsersPage() {
                       {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="relative">
+                      <div className="relative inline-block">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() =>
-                            setOpenMenuId(openMenuId === user.id ? null : user.id)
-                          }
-                          disabled={user.id === currentUser?.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (openMenuId === user.id) {
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const menuHeight = 100; // Approximate menu height
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const spaceAbove = rect.top;
+                              const openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+                              
+                              setMenuPosition({
+                                top: openUp ? rect.top : rect.bottom,
+                                left: rect.right - 192, // 192 = w-48 = 12rem
+                                openUp
+                              });
+                              setOpenMenuId(user.id);
+                            }
+                          }}
                         >
                           <MoreVertical className="w-4 h-4" />
                         </Button>
-
-                        {openMenuId === user.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-10">
-                            {hasPermission('users', 'edit') && (
-                              <button
-                                onClick={() => handleEditUser(user)}
-                                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                              >
-                                <Edit className="w-4 h-4 mr-2" />
-                                Edit User
-                              </button>
-                            )}
-                            {hasPermission('users', 'delete') && (
-                              <button
-                                onClick={() => {
-                                  setDeleteUserId(user.id);
-                                  setOpenMenuId(null);
-                                }}
-                                className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete User
-                              </button>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -398,83 +403,74 @@ export function UsersPage() {
               )}
             </tbody>
           </table>
-        </div>
-        
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-6 px-2">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Page {currentPage} of {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-              >
-                First
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              
-              {/* Page numbers */}
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum: number;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(pageNum)}
-                      className="w-8"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-              >
-                Last
-              </Button>
-            </div>
           </div>
+        </div>
+
+        {/* Fixed position dropdown menu */}
+        {openMenuId && menuPosition && (
+          <>
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => { setOpenMenuId(null); setMenuPosition(null); }}
+            />
+            <div 
+              className="fixed w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+              style={{
+                top: menuPosition.openUp ? 'auto' : menuPosition.top + 4,
+                bottom: menuPosition.openUp ? window.innerHeight - menuPosition.top + 4 : 'auto',
+                left: menuPosition.left
+              }}
+            >
+              {hasPermission('users', 'edit') && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const user = paginatedUsers.find(u => u.id === openMenuId);
+                    if (user) handleEditUser(user);
+                    setOpenMenuId(null);
+                    setMenuPosition(null);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center rounded-t-md"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit User
+                </button>
+              )}
+              {hasPermission('users', 'delete') && openMenuId !== currentUser?.id && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteUserId(openMenuId);
+                    setOpenMenuId(null);
+                    setMenuPosition(null);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center rounded-b-md"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete User
+                </button>
+              )}
+            </div>
+          </>
         )}
+        
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredUsers.length}
+          pageSize={pageSize}
+          onPageChange={(page) => setCurrentPage(page)}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }}
+        />
 
         {/* Edit User Modal */}
         {editingUser && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Edit User
@@ -487,23 +483,35 @@ export function UsersPage() {
                 </button>
               </div>
 
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {editingUser.firstName} {editingUser.lastName}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500">
-                  {editingUser.email}
-                </p>
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                    <span className="text-blue-600 dark:text-blue-400 font-medium text-lg">
+                      {editingUser.firstName.charAt(0)}
+                      {editingUser.lastName.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {editingUser.firstName} {editingUser.lastName}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {editingUser.email}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <Label htmlFor="editRole">Role</Label>
+                  <Label htmlFor="editRole" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Role
+                  </Label>
                   <select
                     id="editRole"
                     value={editRoleId}
                     onChange={(e) => setEditRoleId(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {roles.map((role) => (
                       <option key={role.id} value={role.id}>
@@ -511,23 +519,54 @@ export function UsersPage() {
                       </option>
                     ))}
                   </select>
+                  {/* Show role description */}
+                  {editRoleId && (
+                    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
+                        {roles.find(r => r.id === editRoleId)?.name} permissions:
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {roles.find(r => r.id === editRoleId)?.permissions?.slice(0, 8).map((perm, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200"
+                          >
+                            {String(perm)}
+                          </span>
+                        ))}
+                        {(roles.find(r => r.id === editRoleId)?.permissions?.length || 0) > 8 && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                            +{(roles.find(r => r.id === editRoleId)?.permissions?.length || 0) - 8} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="editStatus">Status</Label>
+                  <Label htmlFor="editStatus" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Status
+                  </Label>
                   <select
                     id="editStatus"
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1.5 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
                   </select>
+                  <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    {editStatus === 'active' && 'User can log in and access the system'}
+                    {editStatus === 'inactive' && 'User account is disabled'}
+                    {editStatus === 'suspended' && 'User is temporarily blocked from accessing'}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <Button variant="outline" onClick={() => setEditingUser(null)}>
                   Cancel
                 </Button>

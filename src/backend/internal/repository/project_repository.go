@@ -113,6 +113,7 @@ func (r *ProjectRepository) List(ctx context.Context, filter ProjectFilter) (*do
 			"version_tag":    1,
 			"path_prefix":    1,
 			"status":         1,
+			"is_locked":      1,
 			"created_at":     1,
 			"updated_at":     1,
 			"created_by":     1,
@@ -158,7 +159,9 @@ func (r *ProjectRepository) Update(ctx context.Context, id string, project *doma
 			"name":        project.Name,
 			"description": project.Description,
 			"version_tag": project.VersionTag,
+			"path_prefix": project.PathPrefix,
 			"status":      project.Status,
+			"is_locked":   project.IsLocked,
 			"updated_at":  project.UpdatedAt,
 		},
 	}

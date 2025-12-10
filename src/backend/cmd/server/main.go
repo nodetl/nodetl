@@ -115,12 +115,12 @@ func main() {
 	schemaHandler := handler.NewSchemaHandler(schemaRepo)
 	nodeTypeHandler := handler.NewNodeTypeHandler(nodeTypeRepo)
 	mappingHandler := handler.NewMappingHandler(mappingRepo, schemaRepo, mappingService)
-	executionHandler := handler.NewExecutionHandler(executionRepo, flowExecutor)
+	executionHandler := handler.NewExecutionHandler(executionRepo, workflowRepo, flowExecutor)
 	webhookHandler := handler.NewWebhookHandler(flowExecutor)
 	nodeSchemaHandler := handler.NewNodeSchemaHandler(nodeSchemaRepo)
 	aiHandler := handler.NewAIHandler(aiService)
 	versionHandler := handler.NewVersionHandler(versionRepo)
-	projectHandler := handler.NewProjectHandler(projectRepo)
+	projectHandler := handler.NewProjectHandler(projectRepo, workflowRepo)
 
 	// Auth handlers
 	authHandler := handler.NewAuthHandler(authService)
@@ -321,11 +321,14 @@ func main() {
 			projects.POST("", middleware.RequirePermission(string(domain.PermissionVersionEdit)), projectHandler.Create)
 			projects.PUT("/:id", middleware.RequirePermission(string(domain.PermissionVersionEdit)), projectHandler.Update)
 			projects.DELETE("/:id", middleware.RequirePermission(string(domain.PermissionVersionDelete)), projectHandler.Delete)
+			projects.POST("/:id/lock", middleware.RequirePermission(string(domain.PermissionProjectLock)), projectHandler.ToggleLock)
 			// Workflows within project
 			projects.POST("/:id/workflows", middleware.RequirePermission(string(domain.PermissionWorkflowEdit)), projectHandler.AddWorkflow)
 			projects.GET("/:id/workflows/:workflowId", projectHandler.GetWorkflow)
 			projects.PUT("/:id/workflows/:workflowId", middleware.RequirePermission(string(domain.PermissionWorkflowEdit)), projectHandler.UpdateWorkflow)
 			projects.DELETE("/:id/workflows/:workflowId", middleware.RequirePermission(string(domain.PermissionWorkflowDelete)), projectHandler.DeleteWorkflow)
+			// Executions for project
+			projects.GET("/:id/executions", middleware.RequirePermission(string(domain.PermissionExecutionView)), executionHandler.ListExecutionsByProject)
 		}
 	}
 

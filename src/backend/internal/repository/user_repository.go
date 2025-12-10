@@ -109,6 +109,7 @@ func (r *userRepository) GetByID(ctx context.Context, id primitive.ObjectID) (*d
 		}
 		return nil, err
 	}
+	user.ComputeIsActive()
 	return &user, nil
 }
 
@@ -121,6 +122,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*domain.
 		}
 		return nil, err
 	}
+	user.ComputeIsActive()
 	return &user, nil
 }
 
@@ -133,6 +135,7 @@ func (r *userRepository) GetByGoogleID(ctx context.Context, googleID string) (*d
 		}
 		return nil, err
 	}
+	user.ComputeIsActive()
 	return &user, nil
 }
 
@@ -145,6 +148,7 @@ func (r *userRepository) GetByMicrosoftID(ctx context.Context, microsoftID strin
 		}
 		return nil, err
 	}
+	user.ComputeIsActive()
 	return &user, nil
 }
 
@@ -188,6 +192,11 @@ func (r *userRepository) GetAll(ctx context.Context, filter UserFilter) ([]domai
 	var users []domain.User
 	if err := cursor.All(ctx, &users); err != nil {
 		return nil, 0, err
+	}
+
+	// Compute IsActive for all users
+	for i := range users {
+		users[i].ComputeIsActive()
 	}
 
 	return users, total, nil

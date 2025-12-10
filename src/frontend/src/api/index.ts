@@ -486,6 +486,13 @@ export const executionsApi = {
     return data;
   },
   
+  listByProject: async (projectId: string, page = 1, pageSize = 50) => {
+    const { data } = await api.get<{ data: Execution[]; total: number; page: number; pageSize: number; totalPages: number }>(
+      `/projects/${projectId}/executions?page=${page}&pageSize=${pageSize}`
+    );
+    return data;
+  },
+  
   getLatest: async (workflowId: string) => {
     const { data } = await api.get<Execution[]>(
       `/workflows/${workflowId}/executions/latest`
@@ -660,6 +667,11 @@ export const projectsApi = {
   
   delete: async (id: string) => {
     await api.delete(`/projects/${id}`);
+  },
+  
+  toggleLock: async (id: string, isLocked: boolean) => {
+    const { data } = await api.post<Project>(`/projects/${id}/lock`, { isLocked });
+    return data;
   },
   
   addWorkflow: async (projectId: string, workflowId: string) => {

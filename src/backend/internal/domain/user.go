@@ -34,6 +34,7 @@ type User struct {
 	LastName        string             `json:"lastName" bson:"last_name"`
 	Avatar          string             `json:"avatar,omitempty" bson:"avatar,omitempty"`
 	Status          UserStatus         `json:"status" bson:"status"`
+	IsActive        bool               `json:"isActive" bson:"-"` // Computed from Status, not stored in DB
 	RoleID          primitive.ObjectID `json:"roleId" bson:"role_id"`
 	ThemePreference ThemePreference    `json:"themePreference" bson:"theme_preference"`
 
@@ -52,6 +53,11 @@ type User struct {
 	CreatedBy   string     `json:"createdBy,omitempty" bson:"created_by,omitempty"`
 }
 
+// ComputeIsActive sets the IsActive field based on Status
+func (u *User) ComputeIsActive() {
+	u.IsActive = u.Status == UserStatusActive
+}
+
 // UserWithRole includes the user with their role details
 type UserWithRole struct {
 	User
@@ -67,6 +73,7 @@ type PublicUser struct {
 	LastName           string             `json:"lastName"`
 	Avatar             string             `json:"avatar,omitempty"`
 	Status             UserStatus         `json:"status"`
+	IsActive           bool               `json:"isActive"`
 	RoleID             primitive.ObjectID `json:"roleId"`
 	ThemePreference    ThemePreference    `json:"themePreference"`
 	MustChangePassword bool               `json:"mustChangePassword"`
@@ -85,6 +92,7 @@ func (u *User) ToPublic() PublicUser {
 		LastName:           u.LastName,
 		Avatar:             u.Avatar,
 		Status:             u.Status,
+		IsActive:           u.Status == UserStatusActive,
 		RoleID:             u.RoleID,
 		ThemePreference:    u.ThemePreference,
 		MustChangePassword: u.MustChangePassword,

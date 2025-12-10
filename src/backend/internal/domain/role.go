@@ -58,6 +58,7 @@ const (
 	PermissionProjectCreate Permission = "projects:create"
 	PermissionProjectEdit   Permission = "projects:edit"
 	PermissionProjectDelete Permission = "projects:delete"
+	PermissionProjectLock   Permission = "projects:lock"
 
 	// User management permissions
 	PermissionUserView   Permission = "users:view"
@@ -92,7 +93,7 @@ func AllPermissions() []Permission {
 		PermissionNodeTypeView, PermissionNodeTypeCreate, PermissionNodeTypeEdit, PermissionNodeTypeDelete,
 		PermissionNodeSchemaView, PermissionNodeSchemaCreate, PermissionNodeSchemaEdit, PermissionNodeSchemaDelete,
 		PermissionVersionView, PermissionVersionCreate, PermissionVersionEdit, PermissionVersionDelete,
-		PermissionProjectView, PermissionProjectCreate, PermissionProjectEdit, PermissionProjectDelete,
+		PermissionProjectView, PermissionProjectCreate, PermissionProjectEdit, PermissionProjectDelete, PermissionProjectLock,
 		PermissionUserView, PermissionUserCreate, PermissionUserEdit, PermissionUserDelete,
 		PermissionRoleView, PermissionRoleCreate, PermissionRoleEdit, PermissionRoleDelete,
 		PermissionInvitationView, PermissionInvitationCreate, PermissionInvitationEdit, PermissionInvitationDelete,

@@ -94,15 +94,18 @@ export default function WorkflowEditorPage() {
     queryFn: () => projectsApi.list(1, 100),
   });
   
-  // Auto-select Default project if no project is selected
+  // Auto-select Default project only if:
+  // 1. This is a NEW workflow (not editing existing)
+  // 2. No project was specified in URL params
+  // 3. Projects have loaded
   useEffect(() => {
-    if (!selectedProjectId && projectsData?.data) {
+    if (isNew && !initialProjectId && !selectedProjectId && projectsData?.data) {
       const defaultProject = projectsData.data.find((p: Project) => p.name === 'Default');
       if (defaultProject) {
         setSelectedProjectId(defaultProject.id);
       }
     }
-  }, [selectedProjectId, projectsData]);
+  }, [isNew, initialProjectId, selectedProjectId, projectsData]);
   
   // Get selected project for pathPrefix
   const selectedProject = useMemo(() => {

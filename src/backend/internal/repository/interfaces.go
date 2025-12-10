@@ -20,10 +20,11 @@ type WorkflowRepository interface {
 }
 
 type WorkflowFilter struct {
-	Status   *domain.WorkflowStatus
-	Name     *string
-	Page     int
-	PageSize int
+	Status    *domain.WorkflowStatus
+	Name      *string
+	ProjectID *string
+	Page      int
+	PageSize  int
 }
 
 // SchemaRepository defines the interface for schema data operations
@@ -66,6 +67,7 @@ type ExecutionRepository interface {
 	Create(ctx context.Context, execution *domain.Execution) error
 	GetByID(ctx context.Context, id primitive.ObjectID) (*domain.Execution, error)
 	GetByWorkflowID(ctx context.Context, workflowID primitive.ObjectID, page, pageSize int) ([]domain.Execution, int64, error)
+	GetByWorkflowIDs(ctx context.Context, workflowIDs []primitive.ObjectID, page, pageSize int) ([]domain.Execution, int64, error)
 	Update(ctx context.Context, execution *domain.Execution) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	GetLatest(ctx context.Context, workflowID primitive.ObjectID, limit int) ([]domain.Execution, error)

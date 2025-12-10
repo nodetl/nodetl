@@ -7,31 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-12-10
+
 ### Added
-- Initial release of Workflow Engine
-- Visual workflow designer with drag-and-drop interface
-- Node-based workflow architecture
-- Built-in node types: Webhook, HTTP Request, Transform, Condition, Loop, Response, Code
-- REST API for workflow management
-- Version management system for organizing workflows
-- Auto-save functionality
-- Docker support with single-image deployment
-- MongoDB integration for data persistence
+- 🔒 Project Lock Feature
+  - Lock/unlock projects to prevent modifications
+  - Visual lock indicator on project headers
+  - Permission-based lock control (`projects:lock`)
+
+- 🎨 Dialog Component System
+  - New reusable Dialog/AlertDialog components
+  - `useConfirm` and `useAlert` hooks for easy dialogs
+  - Full dark theme support
+  - Animated transitions
+
+- 📊 Project Traces Page
+  - View execution traces by project
+  - Filter and pagination support
+
+- 🔐 Enhanced Permission System
+  - `projects:delete` permission
+  - `projects:lock` permission
+  - Role-based access control improvements
 
 ### Changed
-- N/A
-
-### Deprecated
-- N/A
-
-### Removed
-- N/A
+- Improved workflow list UI with better drag-drop visual feedback
+- Enhanced pagination component with dark theme support
+- Conditional endpoint path display (only for webhook triggers)
 
 ### Fixed
-- N/A
+- Fixed workflow creation going to wrong project
+- Fixed navigation persistence across page refreshes
+- Fixed role editing for system roles
+- Fixed empty status badge display
+- Fixed user action buttons visibility
 
 ### Security
-- N/A
+- Active workflows cannot be deleted
+- Active workflows cannot be moved between projects
+- Locked projects cannot have workflows deleted
+- Projects with active workflows cannot be deleted
 
 ## [1.0.0] - 2025-12-05
 
@@ -79,5 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/yourusername/workflow-engine/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yourusername/workflow-engine/releases/tag/v1.0.0
+[Unreleased]: https://github.com/nodetl/nodetl/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/nodetl/nodetl/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/nodetl/nodetl/releases/tag/v1.0.0

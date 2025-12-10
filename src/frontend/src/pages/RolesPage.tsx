@@ -334,6 +334,12 @@ export function RolesPage() {
               {isCreating ? 'Create New Role' : 'Edit Role'}
             </h2>
 
+            {editingRole?.isSystem && (
+              <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-300 text-sm">
+                <strong>System Role:</strong> You can modify permissions but cannot change the role name.
+              </div>
+            )}
+
             <div className="space-y-4 mb-6">
               <div>
                 <Label htmlFor="roleName">Role Name</Label>
@@ -493,7 +499,7 @@ export function RolesPage() {
                     <Users className="w-4 h-4 inline mr-1" />
                     {convertPermissionsToGrouped(role.permissions as unknown as string[]).length} resources
                   </span>
-                  {!role.isSystem && hasPermission('roles', 'edit') && (
+                  {hasPermission('roles', 'edit') && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -501,6 +507,7 @@ export function RolesPage() {
                         e.stopPropagation();
                         handleEditRole(role);
                       }}
+                      title="Edit role"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -513,6 +520,7 @@ export function RolesPage() {
                         e.stopPropagation();
                         setDeleteRoleId(role.id);
                       }}
+                      title="Delete role"
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </Button>

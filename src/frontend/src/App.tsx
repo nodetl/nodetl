@@ -12,8 +12,10 @@ import { RolesPage } from '@/pages/RolesPage';
 import { InvitationsPage } from '@/pages/InvitationsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import ProjectsPage from '@/pages/ProjectsPage';
+import ProjectTracesPage from '@/pages/ProjectTracesPage';
 import { ForceChangePasswordPage } from '@/pages/ForceChangePasswordPage';
 import { ProtectedRoute, PermissionRoute } from '@/components/ProtectedRoute';
+import { LayoutRoute } from '@/components/LayoutRoute';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { useAuthStore } from '@/stores/authStore';
 import { Loader2 } from 'lucide-react';
@@ -39,7 +41,7 @@ function HomePage() {
     return <Navigate to="/change-password" replace />;
   }
 
-  return <WorkflowListPage />;
+  return <Navigate to="/workflows" replace />;
 }
 
 function App() {
@@ -47,7 +49,7 @@ function App() {
     <ThemeProvider>
       <ReactFlowProvider>
         <Routes>
-          {/* Home - Login or Workflows based on auth state */}
+          {/* Home - redirect to workflows or login */}
           <Route path="/" element={<HomePage />} />
           
           {/* Public routes */}
@@ -57,30 +59,31 @@ function App() {
           <Route path="/403" element={<ForbiddenPage />} />
           <Route path="/change-password" element={<ForceChangePasswordPage />} />
 
-          {/* Protected routes - require authentication */}
+          {/* Protected routes with persistent Layout */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/workflows" element={<WorkflowListPage />} />
-            <Route path="/workflows/:id" element={<WorkflowEditorPage />} />
-            <Route path="/workflows/:id/trace" element={<TraceLogsPage />} />
-            <Route path="/workflows/:id/executions/:executionId" element={<ExecutionDetailPage />} />
-            <Route path="/workflows/:id/n/:nodeId" element={<NodeDetailPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/projects" element={<ProjectsPage />} />
-          </Route>
-
-          {/* Admin routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<PermissionRoute resource="users" action="view" />}>
-              <Route path="/admin/users" element={<UsersPage />} />
-            </Route>
-            <Route element={<PermissionRoute resource="roles" action="view" />}>
-              <Route path="/admin/roles" element={<RolesPage />} />
-            </Route>
-            <Route element={<PermissionRoute resource="invitations" action="view" />}>
-              <Route path="/admin/invitations" element={<InvitationsPage />} />
-            </Route>
-            <Route element={<PermissionRoute resource="settings" action="view" />}>
-              <Route path="/admin/settings" element={<SettingsPage />} />
+            <Route element={<LayoutRoute />}>
+              <Route path="/workflows" element={<WorkflowListPage />} />
+              <Route path="/workflows/:id" element={<WorkflowEditorPage />} />
+              <Route path="/workflows/:id/trace" element={<TraceLogsPage />} />
+              <Route path="/workflows/:id/executions/:executionId" element={<ExecutionDetailPage />} />
+              <Route path="/workflows/:id/n/:nodeId" element={<NodeDetailPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:id/traces" element={<ProjectTracesPage />} />
+              
+              {/* Admin routes */}
+              <Route element={<PermissionRoute resource="users" action="view" />}>
+                <Route path="/admin/users" element={<UsersPage />} />
+              </Route>
+              <Route element={<PermissionRoute resource="roles" action="view" />}>
+                <Route path="/admin/roles" element={<RolesPage />} />
+              </Route>
+              <Route element={<PermissionRoute resource="invitations" action="view" />}>
+                <Route path="/admin/invitations" element={<InvitationsPage />} />
+              </Route>
+              <Route element={<PermissionRoute resource="settings" action="view" />}>
+                <Route path="/admin/settings" element={<SettingsPage />} />
+              </Route>
             </Route>
           </Route>
 

@@ -24,12 +24,12 @@ func NewExecutionRepository(client *mongodb.Client) ExecutionRepository {
 
 func (r *executionRepository) Create(ctx context.Context, execution *domain.Execution) error {
 	execution.StartedAt = time.Now()
-	
+
 	result, err := r.collection.InsertOne(ctx, execution)
 	if err != nil {
 		return err
 	}
-	
+
 	execution.ID = result.InsertedID.(primitive.ObjectID)
 	return nil
 }
@@ -48,31 +48,65 @@ func (r *executionRepository) GetByID(ctx context.Context, id primitive.ObjectID
 
 func (r *executionRepository) GetByWorkflowID(ctx context.Context, workflowID primitive.ObjectID, page, pageSize int) ([]domain.Execution, int64, error) {
 	query := bson.M{"workflow_id": workflowID}
-	
+
 	total, err := r.collection.CountDocuments(ctx, query)
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	opts := options.Find().
 		SetSort(bson.D{{Key: "started_at", Value: -1}})
-	
+
 	if pageSize > 0 {
 		opts.SetLimit(int64(pageSize))
 		opts.SetSkip(int64((page - 1) * pageSize))
 	}
-	
+
 	cursor, err := r.collection.Find(ctx, query, opts)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var executions []domain.Execution
 	if err := cursor.All(ctx, &executions); err != nil {
 		return nil, 0, err
 	}
-	
+
+	return executions, total, nil
+}
+
+func (r *executionRepository) GetByWorkflowIDs(ctx context.Context, workflowIDs []primitive.ObjectID, page, pageSize int) ([]domain.Execution, int64, error) {
+	if len(workflowIDs) == 0 {
+		return []domain.Execution{}, 0, nil
+	}
+
+	query := bson.M{"workflow_id": bson.M{"$in": workflowIDs}}
+
+	total, err := r.collection.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	opts := options.Find().
+		SetSort(bson.D{{Key: "started_at", Value: -1}})
+
+	if pageSize > 0 {
+		opts.SetLimit(int64(pageSize))
+		opts.SetSkip(int64((page - 1) * pageSize))
+	}
+
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var executions []domain.Execution
+	if err := cursor.All(ctx, &executions); err != nil {
+		return nil, 0, err
+	}
+
 	return executions, total, nil
 }
 
@@ -90,17 +124,17 @@ func (r *executionRepository) GetLatest(ctx context.Context, workflowID primitiv
 	opts := options.Find().
 		SetSort(bson.D{{Key: "started_at", Value: -1}}).
 		SetLimit(int64(limit))
-	
+
 	cursor, err := r.collection.Find(ctx, bson.M{"workflow_id": workflowID}, opts)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-	
+
 	var executions []domain.Execution
 	if err := cursor.All(ctx, &executions); err != nil {
 		return nil, err
 	}
-	
+
 	return executions, nil
 }

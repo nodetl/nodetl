@@ -170,6 +170,12 @@ func (r *roleRepository) SeedDefaults(ctx context.Context) error {
 			if err := r.Create(ctx, &role); err != nil {
 				return err
 			}
+		} else if existing.IsSystem {
+			// Update system roles to ensure they have the latest permissions
+			existing.Permissions = role.Permissions
+			if err := r.Update(ctx, existing); err != nil {
+				return err
+			}
 		}
 	}
 

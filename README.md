@@ -1,5 +1,6 @@
 # 🔄 NodeTL
 
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/nodetl/nodetl/releases/tag/v1.0.1)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go)](https://golang.org/)
 [![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react)](https://reactjs.org/)

@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Key, Palette, Save, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useAuthStore } from '@/stores/authStore';
-import { authApi, usersApi } from '@/api';
+import { authApi, usersApi, rolesApi, type Role } from '@/api';
 
 export function ProfilePage() {
   const user = useAuthStore((state) => state.user);
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'theme'>('profile');
+  const [role, setRole] = useState<Role | null>(null);
   
   // Profile form
   const [firstName, setFirstName] = useState(user?.firstName || '');
@@ -27,6 +28,21 @@ export function ProfilePage() {
   // Messages
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Fetch role on mount
+  useEffect(() => {
+    const fetchRole = async () => {
+      if (user?.roleId) {
+        try {
+          const roleData = await rolesApi.get(user.roleId);
+          setRole(roleData);
+        } catch (err) {
+          console.error('Failed to fetch role:', err);
+        }
+      }
+    };
+    fetchRole();
+  }, [user?.roleId]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +156,7 @@ export function ProfilePage() {
                   </h2>
                   <p className="text-gray-500 dark:text-gray-400">{user?.email}</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Role: {user?.role?.name || 'N/A'}
+                    Role: {role?.name || user?.role?.name || 'N/A'}
                   </p>
                 </div>
               </div>

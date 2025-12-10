@@ -59,6 +59,9 @@ func (r *workflowRepository) GetAll(ctx context.Context, filter WorkflowFilter) 
 	if filter.Name != nil && *filter.Name != "" {
 		query["name"] = bson.M{"$regex": *filter.Name, "$options": "i"}
 	}
+	if filter.ProjectID != nil {
+		query["project_id"] = *filter.ProjectID
+	}
 
 	// Count total
 	total, err := r.collection.CountDocuments(ctx, query)

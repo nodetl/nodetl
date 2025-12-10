@@ -164,6 +164,24 @@ func (h *WorkflowHandler) UpdateWorkflow(c *gin.Context) {
 		return
 	}
 
+	// Check if current project is locked (before any changes)
+	if existing.ProjectID != "" && h.projectRepo != nil {
+		currentProject, err := h.projectRepo.GetByID(c.Request.Context(), existing.ProjectID)
+		if err == nil && currentProject != nil && currentProject.IsLocked {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot modify workflow in a locked project."})
+			return
+		}
+	}
+
+	// Check if target project is locked (if moving to different project)
+	if workflow.ProjectID != "" && workflow.ProjectID != existing.ProjectID && h.projectRepo != nil {
+		targetProject, err := h.projectRepo.GetByID(c.Request.Context(), workflow.ProjectID)
+		if err == nil && targetProject != nil && targetProject.IsLocked {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot move workflow to a locked project."})
+			return
+		}
+	}
+
 	workflow.ID = id
 	workflow.CreatedAt = existing.CreatedAt
 	workflow.CreatedBy = existing.CreatedBy
@@ -250,6 +268,34 @@ func (h *WorkflowHandler) DeleteWorkflow(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid workflow ID"})
 		return
+	}
+
+	// Get workflow to check status and project lock
+	workflow, err := h.repo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if workflow == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "workflow not found"})
+		return
+	}
+
+	// Check if workflow is active
+	if workflow.Status == domain.WorkflowStatusActive {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": "Cannot delete an active workflow. Deactivate it first.",
+		})
+		return
+	}
+
+	// Check if project is locked
+	if workflow.ProjectID != "" && h.projectRepo != nil {
+		project, err := h.projectRepo.GetByID(c.Request.Context(), workflow.ProjectID)
+		if err == nil && project != nil && project.IsLocked {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Cannot delete workflow from a locked project."})
+			return
+		}
 	}
 
 	if err := h.repo.Delete(c.Request.Context(), id); err != nil {

@@ -14,6 +14,7 @@ type Project struct {
 	VersionTag  string             `json:"versionTag" bson:"version_tag"` // e.g., "1.0.0", "2.0.0"
 	PathPrefix  string             `json:"pathPrefix" bson:"path_prefix"` // e.g., "/api/v1"
 	Status      ProjectStatus      `json:"status" bson:"status"`
+	IsLocked    bool               `json:"isLocked" bson:"is_locked"` // When true, no changes allowed
 	Workflows   []Workflow         `json:"workflows" bson:"workflows"`
 	CreatedAt   time.Time          `json:"createdAt" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updatedAt" bson:"updated_at"`
@@ -37,6 +38,7 @@ type ProjectListItem struct {
 	VersionTag    string             `json:"versionTag" bson:"version_tag"`
 	PathPrefix    string             `json:"pathPrefix" bson:"path_prefix"`
 	Status        ProjectStatus      `json:"status" bson:"status"`
+	IsLocked      bool               `json:"isLocked" bson:"is_locked"`
 	WorkflowCount int                `json:"workflowCount" bson:"workflow_count"`
 	CreatedAt     time.Time          `json:"createdAt" bson:"created_at"`
 	UpdatedAt     time.Time          `json:"updatedAt" bson:"updated_at"`
